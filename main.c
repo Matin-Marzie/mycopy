@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
     // ----------Variable-decleration----------
     int file1, file2;
     int chars_read, chars_write;
-    char buf[512];
 
     size_t argv_1_len = strlen(argv[1]);
 
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     // if argv[1] has the format of '-bxxxxx'
     else if (argv[1][0] == '-' && argv[1][1] == 'b')
     {
-        
+
         // If user doesn't specify the buffer size!
         if (argv_1_len == 2)
         {
@@ -98,75 +97,73 @@ int main(int argc, char *argv[])
         {
             if (!fileExists(argv[2]))
             {
-             printf("\"%s\" does not exist!", argv[2]);
-             exit(19);
+                printf("\"%s\" does not exist!", argv[2]);
+                exit(19);
             }
-            printf("starting the proccess of copying with buffer read() write()");
-            // ...open()
-            
+
+            // i take the integer part of '-b1024'
+            char* temp_string = argv[1] + 2;
+            char buf[atoi()];
+            printf("%d", sizeof(buf));
+
+            // ----------Openning-the-files----------
+            if ((file1 = open("tmp.txt", O_RDONLY)) < 0)
+            {
+                perror("Open1: ");
+                exit(1);
+            }
+
+            if ((file2 = open("tmp2.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600) < 0))
+            {
+                perror("Open2: ");
+                exit(5);
+            }
+
+            chars_read = read(file1, buf, sizeof(buf));
+
+            while (chars_read > 0)
+            {
+                chars_read = read(file1, buf, sizeof(buf));
+                if (chars_read < 0)
+                {
+                    perror("read: ");
+                    exit(2);
+                }
+
+                chars_write = write(file2, buf, chars_read);
+                if (chars_write < 0)
+                {
+                    perror("write: ");
+                    exit(7);
+                }
+            }
+            if (chars_read < 0)
+            {
+                perror("reading error: ");
+                exit(3);
+            }
+
+            if (close(file1) < 0)
+            {
+                perror("close1: ");
+                exit(4);
+            }
+
+            if (close(file2) < 0)
+            {
+                perror("close2: ");
+                exit(4);
+            }
         }
     }
     else
     {
         if (!fileExists(argv[1]))
-            {
-             printf("\"%s\" does not exist!", argv[1]);
-             exit(19);
-            }
+        {
+            printf("\"%s\" does not exist!", argv[1]);
+            exit(19);
+        }
         // ...fopen()
-        
-    }
-
-    printf("\"%s\" not found!\n", argv[1]);
-    exit(8);
-
-    // ----------Openning-the-files----------
-    if ((file1 = open("tmp.txt", O_RDONLY)) < 0)
-    {
-        perror("Open1: ");
-        exit(1);
-    }
-
-    if ((file2 = open("tmp2.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600) < 0))
-    {
-        perror("Open2: ");
-        exit(5);
-    }
-
-    chars_read = read(file1, buf, sizeof(buf));
-
-    while (chars_read > 0)
-    {
-        chars_read = read(file1, buf, sizeof(buf));
-        if (chars_read < 0)
-        {
-            perror("read: ");
-            exit(2);
-        }
-
-        chars_write = write(file2, buf, chars_read);
-        if (chars_write < 0)
-        {
-            perror("write: ");
-            exit(7);
-        }
-    }
-    if (chars_read < 0)
-    {
-        perror("reading error: ");
-        exit(3);
-    }
-
-    if (close(file1) < 0)
-    {
-        perror("close1: ");
-        exit(4);
-    }
-
-    if (close(file2) < 0)
-    {
-        perror("close2: ");
-        exit(4);
     }
 
     return 0;
