@@ -4,11 +4,17 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 // ----------Checks-if-a-file-exists----------
 int fileExists(const char *fileName)
 {
-    return 1;
+    struct stat file;
+    if(stat(fileName, &file) == 0)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 void print_usage()
@@ -39,6 +45,7 @@ int main(int argc, char *argv[])
     // ----------Variable-decleration----------
     int file1, file2;
     int chars_read, chars_write;
+
 
     size_t argv_1_len = strlen(argv[1]);
 
@@ -97,33 +104,32 @@ int main(int argc, char *argv[])
         {
             if (!fileExists(argv[2]))
             {
-                printf("\"%s\" does not exist!", argv[2]);
+                printf("\"%s\" does not exist!\n", argv[2]);
                 exit(19);
             }
 
             // i take the integer part of '-b1024'
             char* temp_string = argv[1] + 2;
-            char buf[atoi()];
-            printf("%d", sizeof(buf));
+            char buf[atoi(temp_string)];
 
             // ----------Openning-the-files----------
-            if ((file1 = open("tmp.txt", O_RDONLY)) < 0)
+            if ((file1 = open(argv[2], O_RDONLY)) < 0)
             {
                 perror("Open1: ");
                 exit(1);
             }
 
-            if ((file2 = open("tmp2.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600) < 0))
+            if ((file2 = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0)
             {
                 perror("Open2: ");
                 exit(5);
             }
 
+            // time_start
             chars_read = read(file1, buf, sizeof(buf));
 
             while (chars_read > 0)
             {
-                chars_read = read(file1, buf, sizeof(buf));
                 if (chars_read < 0)
                 {
                     perror("read: ");
@@ -131,11 +137,14 @@ int main(int argc, char *argv[])
                 }
 
                 chars_write = write(file2, buf, chars_read);
-                if (chars_write < 0)
+                
+                if (chars_write < 0 || chars_write != chars_read)
                 {
                     perror("write: ");
                     exit(7);
                 }
+
+                chars_read = read(file1, buf, sizeof(buf));
             }
             if (chars_read < 0)
             {
