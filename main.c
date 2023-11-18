@@ -53,7 +53,6 @@ int main(int argc, char *argv[])
     clock_t start, elapsed;
     double time_spent;
 
-
     // ----------Checking-the-arguments----------
     // If user haven't give any parameter
     if (argc <= 1)
@@ -63,7 +62,7 @@ int main(int argc, char *argv[])
     }
     else if (argc > 4)
     {
-         size_t argv_1_len = strlen(argv[1]);
+        size_t argv_1_len = strlen(argv[1]);
         // If user puts space between -b and buffer size, ex. mycopy -b 1024 file1 file2
         if (argv_1_len == 2 && is_str_part_digit(argv, 2, 0, strlen(argv[2])))
         {
@@ -140,7 +139,7 @@ int main(int argc, char *argv[])
                 exit(21);
             }
             char buf[buffer_size];
-            int buffer_size = 0;
+            using_standard_buffer = 0;
 
             // ----------Openning-the-files----------
             if ((file1 = open(argv[2], O_RDONLY)) < 0)
@@ -205,7 +204,7 @@ int main(int argc, char *argv[])
         }
     }
     // if user wants to use standard buffer can't insert more than 3 parameters
-    else if(argc == 4)
+    else if (argc == 4)
     {
         printf("Too many parameters!\n");
         print_usage();
@@ -276,14 +275,12 @@ int main(int argc, char *argv[])
         }
     }
 
-
-
     // ---------------------------Reporting ...  ---------------------------
     time_spent = (double)elapsed / CLOCKS_PER_SEC;
 
     off_t file_2_size = fileStat2.st_size;
 
-    // velocity KB/s  (kiloBytes / second)
+    // velocity B/s  (Bytes / second)
     long double copy_velocity = file_2_size / time_spent;
 
     // Writing on report.out file
@@ -294,11 +291,30 @@ int main(int argc, char *argv[])
         exit(32);
     }
 
-    const char* using = "STANDARD BUFFER";
-    if(using_standard_buffer)
+    const char *STANDARD_BUFFER_STRING = "STANDARD BUFFER";
+    struct stat reportStat;
+    stat("report.out", &reportStat);
+
+    if (reportStat.st_size == 0)
     {
-        fprintf(report_file, "%-20s%-10d%-25Lf\n", using, buffer_size, copy_velocity);
+        fprintf(report_file, "File Size:          Buffer Size:        Copy Velocity:      \n");
+        fprintf(report_file, "----------          ---------------     --------------      \n");
     }
+
+    printf("File Size:          Buffer Size:        Copy Velocity:      \n");
+    printf("----------          ---------------     --------------      \n");
+
+    if (using_standard_buffer)
+    {
+        fprintf(report_file, "%-20ld%-20s%-10.0Lf B/s\n", file_2_size, STANDARD_BUFFER_STRING, copy_velocity);
+        printf("%-20ld%-20s%-10.0Lf B/s\n", file_2_size, STANDARD_BUFFER_STRING, copy_velocity);
+    }
+    else
+    {
+        fprintf(report_file, "%-20ld%-20d%-10.0Lf B/s\n", file_2_size, buffer_size, copy_velocity);
+        printf("%-20ld%-20d%-10.0Lf B/s\n", file_2_size, buffer_size, copy_velocity);
+    }
+
 
     if (fclose(report_file) != 0)
     {
