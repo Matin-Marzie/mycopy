@@ -163,7 +163,37 @@ int main(int argc, char *argv[])
             printf("\"%s\" does not exist!", argv[1]);
             exit(19);
         }
-        // ...fopen()
+        else{
+            FILE* file1 = fopen(argv[1],"r");
+            if (file1 == NULL) {
+              perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
+              return 1;
+            }
+
+            FILE *file2 = fopen(argv[2], "w");
+            if (file2 == NULL) {
+                perror("Σφάλμα κατά το άνοιγμα του αρχείου 'test2.txt'");
+                fclose(file1);
+                return 1;
+            }
+
+            char c;
+
+            while (1) {
+              c = fgetc(file1);
+
+              if (c == EOF) {
+                break;
+              }
+
+              fputc(c, file2);
+
+            }
+
+            fclose(file1);
+            fclose(file2);
+
+        }
     }
 
     return 0;
