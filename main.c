@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <time.h>
 
 // ----------Checks-if-a-file-exists----------
 int fileExists(const char *fileName)
@@ -173,6 +174,9 @@ int main(int argc, char *argv[])
             exit(19);
         }
         else{
+            clock_t start,elapsed;
+            double time_spent;
+            
             FILE* file1 = fopen(argv[1],"r");
             if (file1 == NULL) {
               perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
@@ -187,6 +191,7 @@ int main(int argc, char *argv[])
             }
 
             char c;
+            start = clock();
 
             while (1) {
               c = fgetc(file1);
@@ -198,6 +203,8 @@ int main(int argc, char *argv[])
               fputc(c, file2);
 
             }
+            elapsed = clock() - start;
+            time_spent = (double)elapsed *1000.0/CLOCKS_PER_SEC;
 
             fclose(file1);
             fclose(file2);
