@@ -7,11 +7,14 @@
 #include <sys/stat.h>
 #include <time.h>
 
+
+struct stat fileStat1, fileStat2;
+
 // ----------Checks-if-a-file-exists----------
 int fileExists(const char *fileName)
 {
     struct stat file;
-    if(stat(fileName, &file) == 0)
+    if (stat(fileName, &file) == 0)
     {
         return 1;
     }
@@ -46,7 +49,8 @@ int main(int argc, char *argv[])
     // ----------Variable-decleration----------
     int file1, file2;
     int chars_read, chars_write;
-
+    clock_t start, elapsed;
+    double time_spent;
 
     size_t argv_1_len = strlen(argv[1]);
 
@@ -77,7 +81,6 @@ int main(int argc, char *argv[])
     // if argv[1] has the format of '-bxxxxx'
     else if (argv[1][0] == '-' && argv[1][1] == 'b')
     {
-
         // If user doesn't specify the buffer size!
         if (argv_1_len == 2)
         {
@@ -97,9 +100,16 @@ int main(int argc, char *argv[])
         // Checks if every x of -bxxxxx is int
         else if (!is_str_part_digit(argv, 1, 2, argv_1_len))
         {
-            printf("Buffer size is not valid!, can be only integer!\n");
+            printf("Buffer size is not valid! can be only integer!\n");
             print_usage();
             exit(14);
+        }
+        // User didn't specify the file1 and file2
+        else if (argc == 2)
+        {
+            printf("Didn't specify any files!\n");
+            print_usage();
+            exit(22);
         }
         else
         {
@@ -108,10 +118,26 @@ int main(int argc, char *argv[])
                 printf("\"%s\" does not exist!\n", argv[2]);
                 exit(19);
             }
+            if (argc == 3)
+            {
+                printf("didn't specify the destination file!\n");
+                print_usage();
+                exit(23);
+            }
 
-            // i take the integer part of '-b1024'
-            char* temp_string = argv[1] + 2;
-            char buf[atoi(temp_string)];
+            // we take the integer part of '-b1024'
+            char *temp_string = argv[1] + 2;
+            int buffer_size = atoi(temp_string);
+
+            // The buffer size can't be 0
+            if (buffer_size == 0)
+            {
+                printf("The buffer size can't be 0\n");
+                printf("example: -b1024\n");
+                print_usage();
+                exit(21);
+            }
+            char buf[buffer_size];
 
             // ----------Openning-the-files----------
             if ((file1 = open(argv[2], O_RDONLY)) < 0)
@@ -119,6 +145,7 @@ int main(int argc, char *argv[])
                 perror("Open1: ");
                 exit(1);
             }
+            if(stat(argv[2], &fileStat1) != 0) exit(26);
 
             if ((file2 = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0)
             {
@@ -127,6 +154,7 @@ int main(int argc, char *argv[])
             }
 
             // time_start
+            start = clock();
             chars_read = read(file1, buf, sizeof(buf));
 
             while (chars_read > 0)
@@ -138,7 +166,7 @@ int main(int argc, char *argv[])
                 }
 
                 chars_write = write(file2, buf, chars_read);
-                
+
                 if (chars_write < 0 || chars_write != chars_read)
                 {
                     perror("write: ");
@@ -147,6 +175,10 @@ int main(int argc, char *argv[])
 
                 chars_read = read(file1, buf, sizeof(buf));
             }
+
+            // time_end
+            elapsed = clock() - start;
+
             if (chars_read < 0)
             {
                 perror("reading error: ");
@@ -159,6 +191,7 @@ int main(int argc, char *argv[])
                 exit(4);
             }
 
+            if(stat(argv[3], &fileStat2) != 0) exit(27);
             if (close(file2) < 0)
             {
                 perror("close2: ");
@@ -170,47 +203,72 @@ int main(int argc, char *argv[])
     {
         if (!fileExists(argv[1]))
         {
-            printf("\"%s\" does not exist!", argv[1]);
+            printf("\"%s\" does not exist!\n", argv[1]);
             exit(19);
         }
-        else{
-            clock_t start,elapsed;
-            double time_spent;
-            
-            FILE* file1 = fopen(argv[1],"r");
-            if (file1 == NULL) {
-              perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
-              return 1;
+        else if(argc == 2)
+        {
+            printf("Didn't specify the destination file!\n");
+            print_usage();
+            exit(24);
+        }
+        else if(argc == 4)
+        {
+            printf("Invalid Command!\nToo many parameters!\n");
+            print_usage();
+            exit(25);
+        }
+        // if argc == 3:
+        else
+        {
+
+            FILE *file1 = fopen(argv[1], "r");
+            if (file1 == NULL)
+            {
+                perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
+                return 1;
             }
+            if(stat(argv[1], &fileStat1) != 0) exit(29);
 
             FILE *file2 = fopen(argv[2], "w");
-            if (file2 == NULL) {
+            if (file2 == NULL)
+            {
                 perror("Σφάλμα κατά το άνοιγμα του αρχείου 'test2.txt'");
                 fclose(file1);
                 return 1;
             }
 
             char c;
+            // time_start
             start = clock();
 
-            while (1) {
-              c = fgetc(file1);
+            while (1)
+            {
+                c = fgetc(file1);
 
-              if (c == EOF) {
-                break;
-              }
+                if (c == EOF)
+                {
+                    break;
+                }
 
-              fputc(c, file2);
-
+                fputc(c, file2);
             }
+            // time_end
             elapsed = clock() - start;
-            time_spent = (double)elapsed *1000.0/CLOCKS_PER_SEC;
 
+            if(stat(argv[2], &fileStat2) != 0) exit(30);
             fclose(file1);
             fclose(file2);
-
         }
     }
+
+
+    // Reporting ...
+    time_spent = (double)elapsed * 1000.0 / CLOCKS_PER_SEC;
+
+    printf("time spent: %lf\n", time_spent);
+    printf("file1 size: %lld\n", (long long)fileStat1.st_size);
+    printf("file2 size: %lld\n", (long long)fileStat2.st_size);
 
     return 0;
 }
