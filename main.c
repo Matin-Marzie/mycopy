@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
+// fileStat1 είναι το stat που έχει πληροφορίες για το πρώρο αρχείο
 struct stat fileStat1, fileStat2;
 
 // ----------Checks-if-a-file-exists----------
@@ -30,6 +31,8 @@ void print_usage()
 
 // -bxxxxx : checks if every x is digit!
 // @param j : it is the index of the first dimention of => argv[j][]
+// @param n : από ποιο index του πίνακα να ξεκινήσει η αναζήτηση
+// @param end : μέχρι ποιο index να γίνει η αναζήτηση
 int is_str_part_digit(char *arr[], int j, int n, size_t end)
 {
     for (int i = n; i < end; i++)
@@ -44,7 +47,6 @@ int is_str_part_digit(char *arr[], int j, int n, size_t end)
 
 int main(int argc, char *argv[])
 {
-
     // ----------Variable-decleration----------
     int file1, file2;
     int using_standard_buffer = 1;
@@ -160,6 +162,7 @@ int main(int argc, char *argv[])
             start = clock();
             chars_read = read(file1, buf, sizeof(buf));
 
+            // Εδώ ξεκινάει η αντιγραφή
             while (chars_read > 0)
             {
                 if (chars_read < 0)
@@ -188,6 +191,7 @@ int main(int argc, char *argv[])
                 exit(3);
             }
 
+            // ----------closing-the-files----------
             if (close(file1) < 0)
             {
                 perror("close1: ");
@@ -232,7 +236,7 @@ int main(int argc, char *argv[])
         // if argc == 3:
         else
         {
-
+            // ----------opening-the-files-------------
             FILE *file1 = fopen(argv[1], "r");
             if (file1 == NULL)
             {
@@ -268,6 +272,7 @@ int main(int argc, char *argv[])
             // time_end
             elapsed = clock() - start;
 
+            // --------------closing-the-files---------------
             fclose(file1);
             fclose(file2);
             if (stat(argv[2], &fileStat2) != 0)
@@ -275,7 +280,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // ---------------------------Reporting ...  ---------------------------
+    // ---------------------------Reporting ...  ---------------------------|
     time_spent = (double)elapsed / CLOCKS_PER_SEC;
 
     off_t file_2_size = fileStat2.st_size;
@@ -284,6 +289,7 @@ int main(int argc, char *argv[])
     long double copy_velocity = file_2_size / time_spent;
 
     // Writing on report.out file
+    // opening-the-file
     FILE *report_file;
     if ((report_file = fopen("report.out", "a+")) == NULL)
     {
@@ -315,7 +321,6 @@ int main(int argc, char *argv[])
         printf("%-20ld%-20d%-10.0Lf B/s\n", file_2_size, buffer_size, copy_velocity);
     }
 
-
     if (fclose(report_file) != 0)
     {
         perror("closing report.out: ");
@@ -324,3 +329,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+// Άμα διαβάσετε μέχρι το τέλος, σας ευχαριστούμε  :)
