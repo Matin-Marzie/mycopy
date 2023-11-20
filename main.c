@@ -11,7 +11,6 @@
 // fileStat1 είναι το stat που έχει πληροφορίες για το πρώρο αρχείο
 struct stat fileStat1, fileStat2;
 
-
 int main(int argc, char *argv[])
 {
     // ----------Variable-decleration----------
@@ -38,13 +37,13 @@ int main(int argc, char *argv[])
             printf("Incorrect form of buffer specification!\n");
             printf("example: [-b1024]\n\n");
             print_usage();
-            exit(17);
+            exit(3);
         }
         else
         {
             printf("Too many parameters!\n");
             print_usage();
-            exit(18);
+            exit(2);
         }
     }
     // if argv[1] has the format of '-bxxxxx'
@@ -57,7 +56,7 @@ int main(int argc, char *argv[])
             printf("Din't specify the buffer size!\n");
             printf("example: [-b1024]\n\n");
             print_usage();
-            exit(12);
+            exit(4);
         }
         // The max buffer size can be -b99999
         else if (argv_1_len > 7)
@@ -65,34 +64,34 @@ int main(int argc, char *argv[])
             printf("Maximum buffer size is 99999 !\n");
             printf("example: [-b99999]\n\n");
             print_usage();
-            exit(13);
+            exit(5);
         }
         // Checks if every x of -bxxxxx is int
         else if (!is_str_part_digit(argv, 1, 2, argv_1_len))
         {
             printf("Buffer size is not valid! can be only integer!\n");
             print_usage();
-            exit(14);
+            exit(6);
         }
         // User didn't specify the file1 and file2
         else if (argc == 2)
         {
-            printf("Didn't specify any files!\n");
+            printf("Didn't specify any file!\n");
             print_usage();
-            exit(22);
+            exit(7);
         }
         else
         {
             if (!fileExists(argv[2]))
             {
                 printf("\"%s\" does not exist!\n", argv[2]);
-                exit(19);
+                exit(9);
             }
             if (argc == 3)
             {
                 printf("Didn't specify the destination file!\n");
                 print_usage();
-                exit(23);
+                exit(8);
             }
 
             // we take the integer part of '-b1024'
@@ -105,7 +104,7 @@ int main(int argc, char *argv[])
                 printf("The buffer size can't be 0\n");
                 printf("example: [-b1024]\n");
                 print_usage();
-                exit(21);
+                exit(10);
             }
             char buf[buffer_size];
             using_standard_buffer = 0;
@@ -114,15 +113,15 @@ int main(int argc, char *argv[])
             if ((file1 = open(argv[2], O_RDONLY)) < 0)
             {
                 perror("Open1: ");
-                exit(1);
+                exit(13);
             }
             if (stat(argv[2], &fileStat1) != 0)
-                exit(26);
+                exit(15);
 
             if ((file2 = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0)
             {
                 perror("Open2: ");
-                exit(5);
+                exit(13);
             }
 
             // time_start
@@ -162,16 +161,16 @@ int main(int argc, char *argv[])
             if (close(file1) < 0)
             {
                 perror("close1: ");
-                exit(4);
+                exit(13);
             }
 
             if (close(file2) < 0)
             {
                 perror("close2: ");
-                exit(4);
+                exit(13);
             }
             if (stat(argv[3], &fileStat2) != 0)
-                exit(27);
+                exit(15);
         }
     }
     // if user wants to use standard buffer can't insert more than 3 parameters
@@ -179,26 +178,26 @@ int main(int argc, char *argv[])
     {
         printf("Too many parameters!\n");
         print_usage();
-        exit(40);
+        exit(2);
     }
     else
     {
         if (!fileExists(argv[1]))
         {
             printf("\"%s\" does not exist!\n", argv[1]);
-            exit(19);
+            exit(9);
         }
         else if (argc == 2)
         {
             printf("Didn't specify the destination file!\n");
             print_usage();
-            exit(24);
+            exit(8);
         }
         else if (argc == 4)
         {
-            printf("Invalid Command!\nToo many parameters!\n");
+            printf("Too many parameters!\n");
             print_usage();
-            exit(25);
+            exit(2);
         }
         // if argc == 3:
         else
@@ -208,17 +207,17 @@ int main(int argc, char *argv[])
             if (file1 == NULL)
             {
                 perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
-                return 1;
+                exit(13);
             }
             if (stat(argv[1], &fileStat1) != 0)
-                exit(29);
+                exit(15);
 
             FILE *file2 = fopen(argv[2], "w");
             if (file2 == NULL)
             {
                 perror("Σφάλμα κατά το άνοιγμα του αρχείου 'test2.txt'");
                 fclose(file1);
-                return 1;
+                exit(13);
             }
 
             char c;
@@ -243,7 +242,7 @@ int main(int argc, char *argv[])
             fclose(file1);
             fclose(file2);
             if (stat(argv[2], &fileStat2) != 0)
-                exit(30);
+                exit(15);
         }
     }
 
@@ -261,7 +260,7 @@ int main(int argc, char *argv[])
     if ((report_file = fopen("report.out", "a+")) == NULL)
     {
         perror("Error while opening the report.out file!\n");
-        exit(32);
+        exit(13);
     }
 
     const char *STANDARD_BUFFER_STRING = "STANDARD BUFFER";
@@ -291,7 +290,7 @@ int main(int argc, char *argv[])
     if (fclose(report_file) != 0)
     {
         perror("closing report.out: ");
-        exit(35);
+        exit(13);
     }
 
     return 0;
