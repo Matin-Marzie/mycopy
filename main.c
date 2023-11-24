@@ -18,8 +18,21 @@ int main(int argc, char *argv[])
     int using_standard_buffer = 1;
     int buffer_size;
     int chars_read, chars_write;
-    clock_t start, elapsed;
+    clock_t start, elapsed, start_dU_count;
     double time_spent;
+    double time_will_take;
+
+    // dU είναι η ταχύτητα αντιγραφής μιας buffer
+    double dU;
+    long int bytes_copied = 0;
+    long int bytes_copied_dU = 0;
+    double bytes_copied_percentage;
+    char hash_tag_array[40];
+    char time_left[] = {"Time Left:"};
+    for (int i = 0; i < 40; i++)
+    {
+        hash_tag_array[i] = '.';
+    }
 
     // ----------Checking-the-arguments----------
     // If user haven't give any parameter
@@ -126,9 +139,10 @@ int main(int argc, char *argv[])
 
             // time_start
             start = clock();
-            chars_read = read(file1, buf, sizeof(buf));
+            chars_read = read(file1, buf, buffer_size);
 
             // Εδώ ξεκινάει η αντιγραφή
+            start_dU_count = clock();
             while (chars_read > 0)
             {
                 if (chars_read < 0)
@@ -144,12 +158,57 @@ int main(int argc, char *argv[])
                     perror("write: ");
                     exit(7);
                 }
-
+                else
+                {
+                    // how many bytes has been copied from the beggining of the program
+                    bytes_copied += chars_write;
+                    // how many bytes has been copied last 10000 ms
+                    bytes_copied_dU += chars_write;
+                }
                 chars_read = read(file1, buf, sizeof(buf));
-            }
+                // each 10 ms we refresh, update the frame!
+                while (clock() - start_dU_count > 10000)
+                {
+                    // we are finding the percentage of the size has been copied!
+                    bytes_copied_percentage = ((double)bytes_copied / fileStat1.st_size * 100);
 
+                    // \r : move the cursor to the beginning of the line
+                    // other option would be \b
+                    printf("\r                                                                                  ");
+                    printf("\r%3d%%", (int)bytes_copied_percentage);
+                    printf("%2s", "[");
+                    for (int i = 0; i < 40; i++)
+                    {
+                        // 0.4 because we have 40 . in hash_tag_array[40] and we multiply it with 0.01 to find the percentage
+                        if (i < (int)bytes_copied_percentage * 0.4)
+                        {
+                            printf("#");
+                        }
+                        else
+                        {
+                            printf("%c", hash_tag_array[i]);
+                        }
+                    }
+                    printf("%s", "]");
+
+                    // dU in bytes/seconds, dU: μεταβολή της ταχύτητα μια χρονική στιγμή
+                    dU =  1000 * bytes_copied_dU / ((clock() - start_dU_count) / 1000);
+
+                    time_will_take = (fileStat1.st_size - bytes_copied) / dU;
+
+                    printf("%20s%.0lf Seconds", time_left, time_will_take);
+                    fflush(stdout);
+
+                    start_dU_count = clock();
+                    bytes_copied_dU = 0;
+                }
+            }
             // time_end
             elapsed = clock() - start;
+
+            printf("\r                                                                                ");
+            printf("\r100%% [########################################]          Copied Successfully!\n");
+            printf("\n");
 
             if (chars_read < 0)
             {
@@ -203,7 +262,7 @@ int main(int argc, char *argv[])
         else
         {
             // ----------opening-the-files-------------
-            FILE *file1 = fopen(argv[1], "r");
+            FILE *file1 = fopen(argv[1], "rb");
             if (file1 == NULL)
             {
                 perror("Σφάλμα κατά το άνοιγμα του πρώτου αρχείου. \n");
@@ -212,7 +271,7 @@ int main(int argc, char *argv[])
             if (stat(argv[1], &fileStat1) != 0)
                 exit(15);
 
-            FILE *file2 = fopen(argv[2], "w");
+            FILE *file2 = fopen(argv[2], "wb");
             if (file2 == NULL)
             {
                 perror("Σφάλμα κατά το άνοιγμα του αρχείου 'test2.txt'");
@@ -220,20 +279,18 @@ int main(int argc, char *argv[])
                 exit(13);
             }
 
-            char c;
+            char character;
             // time_start
             start = clock();
 
             while (1)
             {
-                c = fgetc(file1);
+                character = fgetc(file1);
 
-                if (c == EOF)
-                {
+                if (character == EOF)
                     break;
-                }
 
-                fputc(c, file2);
+                fputc(character, file2);
             }
             // time_end
             elapsed = clock() - start;
@@ -279,12 +336,12 @@ int main(int argc, char *argv[])
     if (using_standard_buffer)
     {
         fprintf(report_file, "%-20ld%-20s%-10.0Lf B/s\n", file_2_size, STANDARD_BUFFER_STRING, copy_velocity);
-        printf("%-20ld%-20s%-10.0Lf B/s\n", file_2_size, STANDARD_BUFFER_STRING, copy_velocity);
+        printf("%-20ld%-20s%-10.0Lf B/s\n\n", file_2_size, STANDARD_BUFFER_STRING, copy_velocity);
     }
     else
     {
         fprintf(report_file, "%-20ld%-20d%-10.0Lf B/s\n", file_2_size, buffer_size, copy_velocity);
-        printf("%-20ld%-20d%-10.0Lf B/s\n", file_2_size, buffer_size, copy_velocity);
+        printf("%-20ld%-20d%-10.0Lf B/s\n\n", file_2_size, buffer_size, copy_velocity);
     }
 
     if (fclose(report_file) != 0)
@@ -297,3 +354,4 @@ int main(int argc, char *argv[])
 }
 
 // Άμα διαβάσετε μέχρι το τέλος, σας ευχαριστούμε  :)
+// Μπορείτε να συμβάλλετε στο Github!
